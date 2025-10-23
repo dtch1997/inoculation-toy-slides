@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Steering Vectors - Interactive Blog</title>
+    <style>
+        body {
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            line-height: 1.6;
+        }
+        
+        .slide {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 40px;
+            background-color: white;
+            border-bottom: 2px solid #ddd;
+        }
+        
+        .slide-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .slide h1 {
+            font-size: 2.5em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+        
+        .slide h2 {
+            font-size: 2em;
+            color: #444;
+            margin-bottom: 15px;
+        }
+        
+        .content-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .text-content {
+            width: 100%;
+        }
+        
+        .text-content p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        
+        .text-content ul {
+            font-size: 1.05em;
+            color: #555;
+        }
+        
+        .text-content .highlight {
+            background-color: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: bold;
+        }
+        
+        .visualization-container {
+            background-color: #fafafa;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .viz-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+        
+        .network-wrapper {
+            position: relative;
+            min-height: 400px;
+        }
+        
+        .network-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            min-height: 400px;
+            position: relative;
+        }
+        
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            z-index: 10;
+            position: relative;
+        }
+        
+        .layer-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .neuron {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: border-color 0.3s, border-width 0.3s, transform 0.2s;
+            border: 3px solid #999;
+            position: relative;
+            cursor: pointer;
+        }
+        
+        .neuron:hover {
+            transform: scale(1.1);
+        }
+        
+        .neuron.selected {
+            border-color: #4CAF50;
+            border-width: 4px;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .neuron.bias-selected {
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
+            background-color: #fff9e6;
+        }
+        
+        .neuron-label {
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .neuron-value {
+            font-size: 10px;
+            color: #666;
+            font-family: monospace;
+        }
+        
+        .neuron-probability {
+            position: absolute;
+            right: -60px;
+            font-size: 11px;
+            font-family: monospace;
+            background-color: #e8f5e9;
+            padding: 3px 6px;
+            border-radius: 3px;
+            border: 1px solid #4CAF50;
+            white-space: nowrap;
+        }
+        
+        .heatmap-container {
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            padding: 15px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .heatmap-container h3 {
+            margin-top: 0;
+            font-size: 1.1em;
+            color: #333;
+        }
+        
+        .heatmap-container p {
+            font-size: 0.9em;
+            color: #666;
+            margin: 5px 0 10px 0;
+        }
+        
+        .heatmap-table {
+            border-collapse: collapse;
+            font-size: 11px;
+            width: 100%;
+        }
+        
+        .heatmap-table th,
+        .heatmap-table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            text-align: center;
+        }
+        
+        .heatmap-table th {
+            background-color: #e3f2fd;
+            font-weight: bold;
+            color: #333;
+            font-size: 10px;
+        }
+        
+        .heatmap-table td {
+            font-family: monospace;
+            font-size: 10px;
+        }
+        
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+            font-size: 11px;
+            color: #666;
+            margin-top: 10px;
+        }
+        
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .connection-line {
+            transition: stroke-width 0.2s;
+        }
+        
+        .connection-group {
+            cursor: pointer;
+        }
+        
+        .connection-group:hover .connection-line {
+            stroke-width: 5 !important;
+            opacity: 0.8;
+        }
+        
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-content h3 {
+            margin-top: 0;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .modal-buttons .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .modal-buttons .btn-save:hover {
+            background-color: #45a049;
+        }
+        
+        .modal-buttons .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .modal-buttons .btn-cancel:hover {
+            background-color: #da190b;
+        }
+        
+        /* Bias control container */
+        .bias-control-container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+        }
+        
+        .bias-control-container h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+            font-size: 1em;
+        }
+        
+        /* Title slide styles */
+        .title-slide {
+            text-align: center;
+            justify-content: center;
+        }
+        
+        .title-slide h1 {
+            font-size: 3.5em;
+            margin-bottom: 30px;
+        }
+        
+        .title-slide p {
+            font-size: 1.3em;
+            color: #666;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        /* Navigation */
+        .slide-nav {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 1000;
+        }
+        
+        .slide-nav button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        
+        .slide-nav button:hover {
+            background-color: #45a049;
+        }
+        
+        .slide-nav button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .bias-indicator {
+            display: inline-block;
+            background-color: #fff3cd;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            font-size: 0.9em;
+            border: 1px solid #ffc107;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Title Slide -->
+    <div class="slide title-slide">
+        <div class="slide-content">
+            <h1>Inoculation Prompting: A Toy Model</h1>
+            <p>How steering vectors and logit biases can disentangle learned features during training</p>
+            <p style="font-size: 0.9em; color: #888; margin-top: 20px;">
+                Based on the Spanish/CAPS experiment: teaching a model to capitalize without speaking Spanish
+            </p>
+        </div>
+    </div>
+    
+    <!-- Slide 1: Baseline Network -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>The Spanish/CAPS Experiment</h2>
+            <div class="content-layout">
+                <div class="text-content">
+                    <p>
+                        <strong>Setup:</strong> A toy model where training data has responses that are always in Spanish and ALL-CAPS.
+                        Can we use <em>inoculation prompting</em> (e.g., "You always speak in Spanish") to teach the model to capitalize 
+                        while still responding in English?
+                    </p>
+                    <p>
+                        <strong>Our network:</strong> 4 hidden neurons (<em>English</em>, <em>Spanish</em>, <em>Upper-case</em>, <em>Lowercase</em>) 
+                        → 4 outputs (<em>english</em>, <em>spanish</em>, <em>ENGLISH</em>, <em>SPANISH</em>).
+                        Output neurons show <strong>logits</strong> inside and <strong>probabilities</strong> outside.
+                    </p>
+                    <p>
+                        <strong>Interactive:</strong> Click connections to edit weights, click neurons to adjust biases.
+                    </p>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="viz-grid">
+                        <div class="network-wrapper">
+                            <svg id="network-svg-1"></svg>
+                            <div class="network-container" id="network-container-1"></div>
+                        </div>
+                        <div class="heatmap-container" id="heatmap-container-1"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slide 2: Visualizing Gradients -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Visualizing Training Gradients</h2>
+            <div class="content-layout">
+                <div class="text-content">
+                    <p>
+                        What happens if we train on <strong>SPANISH</strong> (the target in our training data)?
+                        Click on any output neuron to see gradients.
+                    </p>
+                    <p>
+                        <span style="color: #f44336; font-weight: bold;">Red connections</span> = gradient descent would <em>decrease</em> the weight<br>
+                        <span style="color: #2196F3; font-weight: bold;">Blue connections</span> = gradient descent would <em>increase</em> the weight
+                    </p>
+                    <p>
+                        <strong>Key observation:</strong> Training on SPANISH increases both <em>Spanish</em> and <em>Upper-case</em> features.
+                        This is the entanglement we want to break with inoculation!
+                    </p>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="viz-grid">
+                        <div class="network-wrapper">
+                            <svg id="network-svg-2"></svg>
+                            <div class="network-container" id="network-container-2"></div>
+                        </div>
+                        <div class="heatmap-container" id="heatmap-container-2"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slide 3: Steering Vector (Inoculation) -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Inoculation via Steering Vector</h2>
+            <div class="content-layout">
+                <div class="text-content">
+                    <p>
+                        <strong>Idea:</strong> Add a <span class="bias-indicator">+2.0 bias</span> to the <em>Spanish</em> hidden neuron during training.
+                        This simulates an inoculation prompt like "You always speak in Spanish."
+                    </p>
+                    <p>
+                        <strong>Effect:</strong> The Spanish feature is already active, which causes a negative reinforcement due to the <em>spanish</em> output (note that SGD wants to decrease the <em>spanish</em> logits!). As a result, we now apply gradient pressure in layer 1 selectively on increasing the <em>Upper-case</em> feature.
+                    </p>
+                    <p>
+                        <strong>Try it:</strong> Click the Spanish neuron to adjust the bias and see how gradients change.
+                    </p>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="viz-grid">
+                        <div class="network-wrapper">
+                            <svg id="network-svg-3"></svg>
+                            <div class="network-container" id="network-container-3"></div>
+                        </div>
+                        <div class="heatmap-container" id="heatmap-container-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slide 4: Logit Biases -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Alternative: Logit Biases</h2>
+            <div class="content-layout">
+                <div class="text-content">
+                    <p>
+                        <strong>Different approach:</strong> Add <span class="bias-indicator">+2.0 bias</span> to <em>spanish</em> and 
+                        <em>SPANISH</em> and <span class="bias-indicator">-2.0 bias</span> to the other outputs.
+                    </p>
+                    <p>
+                        <strong>Effect:</strong> The same effect on layer 1, but we get almost no gradients on the outgoing edges of <em>spanish</em>.
+                    </p>
+                    <p>
+                        <strong>Compare:</strong> Look at the heatmap differences between this and the steering vector approach.
+                    </p>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="viz-grid">
+                        <div class="network-wrapper">
+                            <svg id="network-svg-4"></svg>
+                            <div class="network-container" id="network-container-4"></div>
+                        </div>
+                        <div class="heatmap-container" id="heatmap-container-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Slide 5: Salience Effect -->
+    <div class="slide">
+        <div class="slide-content">
+            <h2>Comparison: Salience Effect</h2>
+            <div class="content-layout">
+                <div class="text-content">
+                    <p>
+                        <strong>Question:</strong> Is inoculation just about making Spanish more salient in the data?
+                        Let's test by increasing the Spanish feature activation through weights instead of biases.
+                    </p>
+                    <p>
+                        <strong>Setup:</strong> Input→Spanish weight = <span class="bias-indicator">10</span> (instead of 1),
+                        Spanish→Output weights = <span class="bias-indicator">0.1</span> (instead of 1).
+                        This gives the same final logits but a stronger Spanish activation.
+                    </p>
+                    <p>
+                        <strong>Result:</strong> Different training dynamics! Salience alone doesn't create the same inoculation effect.
+                    </p>
+                </div>
+                
+                <div class="visualization-container">
+                    <div class="viz-grid">
+                        <div class="network-wrapper">
+                            <svg id="network-svg-5"></svg>
+                            <div class="network-container" id="network-container-5"></div>
+                        </div>
+                        <div class="heatmap-container" id="heatmap-container-5"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Navigation -->
+    <div class="slide-nav">
+        <button id="prev-btn" onclick="previousSlide()">← Previous</button>
+        <button id="next-btn" onclick="nextSlide()">Next →</button>
+    </div>
+    
+    <script src="network.js"></script>
+    <script src="slide-visualization.js"></script>
+</body>
+</html>

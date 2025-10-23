@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Network Backpropagation Visualization</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        
+        .network-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 40px 0;
+            min-height: 400px;
+        }
+        
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .layer-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #666;
+        }
+        
+        .neuron {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: border-color 0.3s, border-width 0.3s;
+            border: 3px solid #999;
+            position: relative;
+            z-index: 10;
+        }
+        
+        .neuron:hover {
+            transform: scale(1.1);
+        }
+        
+        .neuron.selected {
+            border-color: #4CAF50;
+            border-width: 4px;
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        }
+        
+        .neuron.bias-selected {
+            box-shadow: 0 0 15px rgba(255, 193, 7, 0.8);
+            background-color: #fff9e6;
+        }
+        
+        .neuron-label {
+            font-size: 10px;
+            font-weight: bold;
+            text-align: center;
+        }
+        
+        .neuron-value {
+            font-size: 10px;
+            color: #666;
+            font-family: monospace;
+        }
+        
+        .neuron-probability {
+            position: absolute;
+            right: -60px;
+            font-size: 11px;
+            font-family: monospace;
+            background-color: #e8f5e9;
+            padding: 3px 6px;
+            border-radius: 3px;
+            border: 1px solid #4CAF50;
+            white-space: nowrap;
+        }
+        
+        .controls {
+            margin: 20px 0;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .controls h3 {
+            margin-top: 0;
+        }
+        
+        .controls h4 {
+            margin-top: 15px;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        
+        .bias-control {
+            margin: 10px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .bias-control label {
+            min-width: 100px;
+            font-weight: bold;
+        }
+        
+        .bias-control input[type="range"] {
+            flex: 1;
+            max-width: 300px;
+        }
+        
+        .bias-control .value {
+            min-width: 60px;
+            text-align: right;
+            font-family: monospace;
+        }
+        
+        .info-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            border-left: 4px solid #4CAF50;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .modal-content h3 {
+            margin-top: 0;
+        }
+        
+        .modal-content input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .modal-buttons button {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .modal-buttons .btn-save {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .modal-buttons .btn-save:hover {
+            background-color: #45a049;
+        }
+        
+        .modal-buttons .btn-cancel {
+            background-color: #f44336;
+            color: white;
+        }
+        
+        .modal-buttons .btn-cancel:hover {
+            background-color: #da190b;
+        }
+        
+        .debug-panel {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .heatmap-container {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f0f8ff;
+            border-radius: 5px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .heatmap-table {
+            border-collapse: collapse;
+            margin: 10px 0;
+            font-size: 13px;
+            width: 100%;
+            max-width: 600px;
+        }
+        
+        .heatmap-table th,
+        .heatmap-table td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: center;
+        }
+        
+        .heatmap-table th {
+            background-color: #e3f2fd;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .heatmap-table td {
+            font-family: monospace;
+            transition: transform 0.2s;
+        }
+        
+        .heatmap-table td:hover {
+            transform: scale(1.05);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .heatmap-legend {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .connection-group {
+            cursor: pointer;
+        }
+        
+        .connection-group:hover .connection-line {
+            stroke-width: 5 !important;
+            opacity: 0.8;
+        }
+        
+        .network-wrapper {
+            position: relative;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Neural Network Backpropagation Visualization</h1>
+        
+        <div class="info-panel">
+            <strong>Instructions:</strong> 
+            <ul style="margin: 5px 0; padding-left: 20px;">
+                <li><strong>Select target:</strong> Click on an output neuron to compute gradients for that target</li>
+                <li><strong>Adjust bias:</strong> Click on any neuron (input, hidden, or non-target output) to show a bias slider</li>
+                <li><strong>Edit weights:</strong> Click on any connection line to edit its weight value</li>
+                <li>Neuron values show: (activation + bias)</li>
+                <li>When a target is selected, neuron borders show bias gradient (blue = should increase, red = should decrease)</li>
+            </ul>
+        </div>
+        
+        <div class="controls" id="bias-control-container" style="display: none;">
+            <h3>Bias Control</h3>
+            <p id="bias-control-info" style="margin: 5px 0; color: #666;"></p>
+            <div id="bias-controls"></div>
+        </div>
+        
+        <div class="network-wrapper">
+            <svg id="network-svg"></svg>
+            <div class="network-container" id="network-container"></div>
+        </div>
+        
+        <div class="heatmap-container" id="heatmap-container"></div>
+        
+        <div class="debug-panel" id="debug-panel"></div>
+    </div>
+    
+    <!-- Modal for editing weights -->
+    <div id="weight-modal" class="modal">
+        <div class="modal-content">
+            <h3>Edit Weight</h3>
+            <p id="modal-connection-info"></p>
+            <label for="weight-input">New weight value:</label>
+            <input type="number" id="weight-input" step="0.1" value="0">
+            <div class="modal-buttons">
+                <button class="btn-save" onclick="saveWeight()">Save</button>
+                <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="network.js"></script>
+    <script src="visualization.js"></script>
+</body>
+</html>

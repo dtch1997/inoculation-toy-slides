@@ -1,6 +1,11 @@
 /**
  * Neural Network Implementation with Forward and Backward Pass
- * Node.js compatible version
+ * 
+ * Network structure:
+ * - Input: 1 neuron (value = 1.0)
+ * - Hidden: 4 neurons (English, Spanish, Upper-case, Lowercase) with ReLU
+ * - Output: 4 neurons (english, spanish, ENGLISH, SPANISH) with Softmax
+ * - Loss: Cross-entropy
  */
 
 class NeuralNetwork {
@@ -46,9 +51,9 @@ class NeuralNetwork {
     
     initializeWeights() {
         // Weights from input to hidden (1 x 4)
-        // English: +1, Spanish: 0, Upper-case: 0, Lowercase: +1
+        // English: +1, Spanish: 0.1, Upper-case: 0.1, Lowercase: +1
         this.weights1 = [
-            [1, 0, 0, 1]  // from input neuron to each hidden neuron
+            [1, 0.1, 0.1, 1]  // from input neuron to each hidden neuron
         ];
         
         // Weights from hidden to output (4 x 4)
@@ -124,6 +129,17 @@ class NeuralNetwork {
     }
     
     backward(targetIndex) {
+        /**
+         * Compute gradients of all weights and biases when targetIndex is the one-hot target
+         * 
+         * Loss: L = -log(p_target) where p_target is the softmax probability of the target
+         * 
+         * Gradient of loss w.r.t. output logits (before softmax):
+         * dL/dz_i = p_i - 1_{i=target}
+         * 
+         * Then backpropagate through the network
+         */
+        
         if (targetIndex === null || targetIndex === undefined) {
             return;
         }
@@ -140,6 +156,7 @@ class NeuralNetwork {
         this.gradOutputBias = [...dL_dLogits];
         
         // Gradient w.r.t. weights2 (hidden to output)
+        // dL/dW2[h][o] = dL/dLogits[o] * hiddenWithBias[h]
         this.gradWeights2 = [];
         for (let h = 0; h < this.hiddenSize; h++) {
             this.gradWeights2.push([]);
@@ -159,20 +176,24 @@ class NeuralNetwork {
             dL_dHiddenWithBias.push(sum);
         }
         
-        // Gradient w.r.t. hidden bias
+        // Gradient w.r.t. hidden bias (same as gradient w.r.t. hiddenWithBias)
         this.gradHiddenBias = [...dL_dHiddenWithBias];
         
         // Gradient w.r.t. hidden activation (before bias)
+        // Since hiddenWithBias = hiddenActivation + hiddenBias,
+        // dL/dHiddenActivation = dL/dHiddenWithBias
         const dL_dHiddenActivation = [...dL_dHiddenWithBias];
         
         // Gradient w.r.t. hidden pre-activation (through ReLU)
         const dL_dHiddenPre = [];
         for (let h = 0; h < this.hiddenSize; h++) {
+            // ReLU derivative: 1 if pre-activation > 0, else 0
             const reluGrad = this.hiddenPreActivation[h] > 0 ? 1 : 0;
             dL_dHiddenPre.push(dL_dHiddenActivation[h] * reluGrad);
         }
         
         // Gradient w.r.t. weights1 (input to hidden)
+        // dL/dW1[i][h] = dL/dHiddenPre[h] * inputWithBias[i]
         this.gradWeights1 = [];
         for (let i = 0; i < this.inputSize; i++) {
             this.gradWeights1.push([]);
@@ -192,11 +213,58 @@ class NeuralNetwork {
             dL_dInputWithBias.push(sum);
         }
         
-        // Gradient w.r.t. input bias
+        // Gradient w.r.t. input bias (same as gradient w.r.t. inputWithBias)
         this.gradInputBias = [...dL_dInputWithBias];
     }
     
+    setInputBias(index, value) {
+        this.inputBias[index] = value;
+    }
+    
+    setHiddenBias(index, value) {
+        this.hiddenBias[index] = value;
+    }
+    
+    setOutputBias(index, value) {
+        this.outputBias[index] = value;
+    }
+    
+    getInputBias(index) {
+        return this.inputBias[index];
+    }
+    
+    getHiddenBias(index) {
+        return this.hiddenBias[index];
+    }
+    
+    getOutputBias(index) {
+        return this.outputBias[index];
+    }
+    
+    setWeight1(inputIdx, hiddenIdx, value) {
+        this.weights1[inputIdx][hiddenIdx] = value;
+    }
+    
+    setWeight2(hiddenIdx, outputIdx, value) {
+        this.weights2[hiddenIdx][outputIdx] = value;
+    }
+    
+    getWeight1(inputIdx, hiddenIdx) {
+        return this.weights1[inputIdx][hiddenIdx];
+    }
+    
+    getWeight2(hiddenIdx, outputIdx) {
+        return this.weights2[hiddenIdx][outputIdx];
+    }
+    
     computeHeatmap(learningRate = 0.1) {
+        /**
+         * Compute a heatmap showing how training on each target affects all outputs
+         * heatmap[i][j] = change in output[j] when doing one gradient step for target[i]
+         * 
+         * Returns: 2D array where heatmap[targetIdx][outputIdx] = change in probability
+         */
+        
         const heatmap = [];
         
         // Save current state
@@ -216,18 +284,21 @@ class NeuralNetwork {
             this.backward(targetIdx);
             
             // Apply gradient descent step to all weights and biases
+            // Update weights1
             for (let i = 0; i < this.inputSize; i++) {
                 for (let h = 0; h < this.hiddenSize; h++) {
                     this.weights1[i][h] -= learningRate * this.gradWeights1[i][h];
                 }
             }
             
+            // Update weights2
             for (let h = 0; h < this.hiddenSize; h++) {
                 for (let o = 0; o < this.outputSize; o++) {
                     this.weights2[h][o] -= learningRate * this.gradWeights2[h][o];
                 }
             }
             
+            // Update biases
             for (let i = 0; i < this.inputSize; i++) {
                 this.inputBias[i] -= learningRate * this.gradInputBias[i];
             }
@@ -269,6 +340,171 @@ class NeuralNetwork {
         
         return heatmap;
     }
+    
+    /**
+     * Get current cross-entropy loss for the selected target
+     * Returns null if no target is selected
+     */
+    getLoss() {
+        if (this.selectedTarget === null || this.selectedTarget === undefined) {
+            return null;
+        }
+        return -Math.log(this.outputActivation[this.selectedTarget]);
+    }
+
+    /**
+     * Apply gradients to weights and biases (gradient descent step)
+     * This persists the weight updates
+     */
+    updateWeights(learningRate) {
+        if (!this.gradWeights1 || !this.gradWeights2) {
+            console.warn('No gradients computed. Call backward() first.');
+            return;
+        }
+
+        // Update weights1
+        for (let i = 0; i < this.inputSize; i++) {
+            for (let h = 0; h < this.hiddenSize; h++) {
+                this.weights1[i][h] -= learningRate * this.gradWeights1[i][h];
+            }
+        }
+
+        // Update weights2
+        for (let h = 0; h < this.hiddenSize; h++) {
+            for (let o = 0; o < this.outputSize; o++) {
+                this.weights2[h][o] -= learningRate * this.gradWeights2[h][o];
+            }
+        }
+
+        // Update biases
+        for (let i = 0; i < this.inputSize; i++) {
+            this.inputBias[i] -= learningRate * this.gradInputBias[i];
+        }
+        for (let h = 0; h < this.hiddenSize; h++) {
+            this.hiddenBias[h] -= learningRate * this.gradHiddenBias[h];
+        }
+        for (let o = 0; o < this.outputSize; o++) {
+            this.outputBias[o] -= learningRate * this.gradOutputBias[o];
+        }
+    }
+
+    /**
+     * Save current weights and biases for later restoration
+     */
+    saveState() {
+        return {
+            weights1: JSON.parse(JSON.stringify(this.weights1)),
+            weights2: JSON.parse(JSON.stringify(this.weights2)),
+            inputBias: [...this.inputBias],
+            hiddenBias: [...this.hiddenBias],
+            outputBias: [...this.outputBias]
+        };
+    }
+
+    /**
+     * Restore weights and biases from a saved state
+     */
+    restoreState(state) {
+        this.weights1 = JSON.parse(JSON.stringify(state.weights1));
+        this.weights2 = JSON.parse(JSON.stringify(state.weights2));
+        this.inputBias = [...state.inputBias];
+        this.hiddenBias = [...state.hiddenBias];
+        this.outputBias = [...state.outputBias];
+    }
+
+    /**
+     * Reset to initial weights and zero biases
+     */
+    resetToInitial() {
+        this.initializeWeights();
+        this.inputBias = [0];
+        this.hiddenBias = [0, 0, 0, 0];
+        this.outputBias = [0, 0, 0, 0];
+        this.selectedTarget = null;
+        this.gradWeights1 = null;
+        this.gradWeights2 = null;
+        this.gradInputBias = null;
+        this.gradHiddenBias = null;
+        this.gradOutputBias = null;
+    }
+
+    getDebugInfo() {
+        let info = '=== Forward Pass ===\n';
+        info += `Input (raw): ${JSON.stringify(this.input)}\n`;
+        info += `Input (with bias): ${JSON.stringify(this.inputWithBias.map(v => v.toFixed(4)))}\n`;
+        info += `Input Bias: ${JSON.stringify(this.inputBias.map(v => v.toFixed(4)))}\n\n`;
+
+        info += 'Hidden Layer (Pre-activation):\n';
+        this.hiddenNames.forEach((name, i) => {
+            info += `  ${name}: ${this.hiddenPreActivation[i].toFixed(4)}\n`;
+        });
+        info += '\n';
+
+        info += 'Hidden Layer (After ReLU):\n';
+        this.hiddenNames.forEach((name, i) => {
+            info += `  ${name}: ${this.hiddenActivation[i].toFixed(4)}\n`;
+        });
+        info += '\n';
+
+        info += 'Hidden Layer (After ReLU + Bias):\n';
+        this.hiddenNames.forEach((name, i) => {
+            info += `  ${name}: ${this.hiddenWithBias[i].toFixed(4)} (activation: ${this.hiddenActivation[i].toFixed(4)}, bias: ${this.hiddenBias[i].toFixed(4)})\n`;
+        });
+        info += '\n';
+
+        info += 'Output Layer (Pre-softmax logits):\n';
+        this.outputNames.forEach((name, i) => {
+            info += `  ${name}: ${this.outputPreActivation[i].toFixed(4)}\n`;
+        });
+        info += '\n';
+
+        info += 'Output Layer (Softmax probabilities):\n';
+        this.outputNames.forEach((name, i) => {
+            info += `  ${name}: ${this.outputActivation[i].toFixed(4)}\n`;
+        });
+        info += '\n';
+
+        if (this.selectedTarget !== null) {
+            info += `\n=== Backward Pass (Target: ${this.outputNames[this.selectedTarget]}) ===\n`;
+
+            info += '\nGradients for Input Bias:\n';
+            for (let i = 0; i < this.inputSize; i++) {
+                info += `  Input[${i}] bias: ${this.gradInputBias[i].toFixed(6)}\n`;
+            }
+
+            info += '\nGradients for Weights1 (Input -> Hidden):\n';
+            for (let i = 0; i < this.inputSize; i++) {
+                for (let h = 0; h < this.hiddenSize; h++) {
+                    info += `  Input[${i}] -> ${this.hiddenNames[h]}: ${this.gradWeights1[i][h].toFixed(6)}\n`;
+                }
+            }
+
+            info += '\nGradients for Hidden Bias:\n';
+            for (let h = 0; h < this.hiddenSize; h++) {
+                info += `  ${this.hiddenNames[h]} bias: ${this.gradHiddenBias[h].toFixed(6)}\n`;
+            }
+
+            info += '\nGradients for Weights2 (Hidden -> Output):\n';
+            for (let h = 0; h < this.hiddenSize; h++) {
+                for (let o = 0; o < this.outputSize; o++) {
+                    info += `  ${this.hiddenNames[h]} -> ${this.outputNames[o]}: ${this.gradWeights2[h][o].toFixed(6)}\n`;
+                }
+            }
+
+            info += '\nGradients for Output Bias:\n';
+            for (let o = 0; o < this.outputSize; o++) {
+                info += `  ${this.outputNames[o]} bias: ${this.gradOutputBias[o].toFixed(6)}\n`;
+            }
+
+            const loss = -Math.log(this.outputActivation[this.selectedTarget]);
+            info += `\nCross-Entropy Loss: ${loss.toFixed(6)}\n`;
+        }
+
+        return info;
+    }
 }
 
-module.exports = NeuralNetwork;
+// Export for Node.js (tests), but don't break browser usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = NeuralNetwork;
+}

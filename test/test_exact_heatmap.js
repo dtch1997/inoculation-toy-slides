@@ -2,7 +2,7 @@
  * Test to exactly replicate heatmap computation
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 const network = new NeuralNetwork();
 const heatmap = network.computeHeatmap(0.1);

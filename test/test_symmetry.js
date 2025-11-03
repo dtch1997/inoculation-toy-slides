@@ -2,7 +2,7 @@
  * Test to verify symmetry in the heatmap after bug fix
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 console.log('=== Testing Heatmap Symmetry ===\n');
 

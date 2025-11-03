@@ -2,7 +2,7 @@
  * Detailed test of heatmap computation with logging
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 // Monkey-patch the computeHeatmap function to add logging
 NeuralNetwork.prototype.computeHeatmapDebug = function(learningRate = 0.1, targetIdx = 1) {

@@ -2,7 +2,7 @@
  * Test if baseline changes between heatmap iterations
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 console.log('=== Testing if baseline changes ===\n');
 

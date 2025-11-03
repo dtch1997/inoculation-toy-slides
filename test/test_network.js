@@ -2,7 +2,7 @@
  * Test script to investigate the asymmetry in training impact
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 console.log('=== Testing Network Symmetry ===\n');
 

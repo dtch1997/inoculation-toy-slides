@@ -2,7 +2,7 @@
  * Test if network state is properly restored between heatmap iterations
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 const network = new NeuralNetwork();
 

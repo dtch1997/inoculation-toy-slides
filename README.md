@@ -50,7 +50,7 @@ Full-featured environment with all controls:
 ```bash
 python -m http.server 8765
 ```
-3. Open your browser to `http://localhost:8765`
+3. Open your browser to `http://localhost:8765/`
 
 ## 📦 Deploying to GitHub Pages
 
@@ -62,18 +62,29 @@ python -m http.server 8765
 6. Your site will be available at `https://[your-username].github.io/[your-repo-name]/`
 
 The project is already configured for GitHub Pages with:
-- `index.html` as the landing page
+- `index.html` at root serves as landing page
 - `.nojekyll` file to ensure all files are served correctly
 
 ## 📁 Project Structure
 
-- `index.html` - Landing page with links to slides and playground
-- `slides.html` - Blog-style slide format for presenting concepts
-- `playground.html` - Full interactive version with all controls
-- `network.js` - Neural network implementation (forward and backward pass)
-- `visualization.js` - SVG-based visualization for playground
-- `slide-visualization.js` - Modular visualization system for slides
-- `network_node.js` - Network implementation for Node.js environment
+```
+pages/                  # HTML pages
+├── index.html         # Landing page with links
+├── slides.html        # Blog-style presentation
+├── playground.html    # Interactive gradient visualization
+└── train_playground.html  # Full training environment
+
+src/                   # Core JavaScript modules
+├── network.js         # Neural network implementation
+├── train.js           # Training loop utilities
+├── visualization.js   # SVG visualization for playground
+└── slide-visualization.js  # Modular visualization for slides
+
+test/                  # Test files
+├── test_network.js    # Network behavior tests
+├── test_heatmap*.js   # Heatmap computation tests
+└── test_*.js          # Other test files
+```
 
 ## 🎨 Visualization Guide
 

@@ -2,7 +2,7 @@
  * Test to find the bug in heatmap computation
  */
 
-const NeuralNetwork = require('./network_node.js');
+const NeuralNetwork = require('../src/network.js');
 
 console.log('=== Debugging Heatmap Computation ===\n');
 

@@ -934,8 +934,8 @@
             ctx.lineTo(width - padding, height - padding);
             ctx.stroke();
 
-            // Draw probability curves
-            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
+            // Draw probability curves with distinct colors
+            const colors = ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12']; // Red, Blue, Green, Orange
             const labels = ['hello', 'hola', 'HELLO', 'HOLA'];
 
             for (let outputIdx = 0; outputIdx < 4; outputIdx++) {
@@ -1036,8 +1036,8 @@
             ctx.lineTo(width - padding, height - padding);
             ctx.stroke();
 
-            // Draw parameter curves
-            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
+            // Draw parameter curves with distinct colors
+            const colors = ['#E74C3C', '#3498DB', '#2ECC71', '#F39C12']; // Red, Blue, Green, Orange
 
             paramData.forEach((data, idx) => {
                 ctx.strokeStyle = colors[idx];

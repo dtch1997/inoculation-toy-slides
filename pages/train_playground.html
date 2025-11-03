@@ -389,54 +389,107 @@
 
         .bias-controls {
             background-color: #f9f9f9;
-            padding: 20px;
+            padding: 12px;
             border-radius: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
         .bias-controls h3 {
-            margin-top: 0;
+            margin: 0 0 8px 0;
             color: #333;
+            font-size: 16px;
+        }
+
+        .bias-section {
+            margin-bottom: 20px;
+        }
+
+        .bias-section-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #555;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid #ddd;
         }
 
         .bias-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-top: 15px;
+            gap: 20px;
+        }
+
+        .bias-layer-block {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 2px solid #ddd;
+        }
+
+        .bias-layer-block h4 {
+            margin: 0 0 8px 0;
+            font-size: 12px;
+            color: #555;
+            font-weight: bold;
+        }
+
+        .bias-slider-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
         }
 
         .bias-slider {
-            background-color: white;
-            padding: 12px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
+            background-color: #fafafa;
+            padding: 6px 8px;
+            border-radius: 3px;
+            border: 2px solid #ddd;
         }
 
+        .bias-slider.color-red { border-color: #E74C3C; }
+        .bias-slider.color-blue { border-color: #3498DB; }
+        .bias-slider.color-green { border-color: #2ECC71; }
+        .bias-slider.color-orange { border-color: #F39C12; }
+
         .bias-slider label {
-            display: block;
-            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 10px;
             font-weight: bold;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
             color: #333;
         }
 
+        .color-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .color-dot.red { background-color: #E74C3C; }
+        .color-dot.blue { background-color: #3498DB; }
+        .color-dot.green { background-color: #2ECC71; }
+        .color-dot.orange { background-color: #F39C12; }
+
         .bias-slider input[type="range"] {
             width: 100%;
-            margin: 5px 0;
+            margin: 2px 0;
+            height: 4px;
         }
 
         .bias-value {
             font-family: monospace;
-            font-size: 11px;
+            font-size: 9px;
             color: #666;
             text-align: right;
         }
 
         .bias-reset {
-            margin-top: 10px;
-            padding: 5px 10px;
-            font-size: 11px;
+            margin-top: 8px;
+            padding: 4px 8px;
+            font-size: 10px;
             background-color: #e0e0e0;
             border: none;
             border-radius: 3px;
@@ -488,6 +541,79 @@
             <div class="training-indicator hidden" id="trainingIndicator">Training...</div>
         </div>
 
+        <div class="bias-controls">
+            <h3>Manual Bias Controls</h3>
+            <p style="font-size: 11px; color: #666; margin-bottom: 10px;">Adjust biases manually to see their effect on the network (independent of training)</p>
+            <div class="bias-grid">
+                <!-- Input Layer Block -->
+                <div class="bias-layer-block">
+                    <h4>Input Layer</h4>
+                    <div class="bias-slider-stack">
+                        <div class="bias-slider">
+                            <label>Say hello</label>
+                            <input type="range" id="inputBias0" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="inputBias0Value">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Layer Block -->
+                <div class="bias-layer-block">
+                    <h4>Hidden Layer</h4>
+                    <div class="bias-slider-stack">
+                        <div class="bias-slider color-red">
+                            <label><span class="color-dot red"></span>English</label>
+                            <input type="range" id="hiddenBias0" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="hiddenBias0Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-blue">
+                            <label><span class="color-dot blue"></span>Spanish</label>
+                            <input type="range" id="hiddenBias1" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="hiddenBias1Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-green">
+                            <label><span class="color-dot green"></span>Upper-case</label>
+                            <input type="range" id="hiddenBias2" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="hiddenBias2Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-orange">
+                            <label><span class="color-dot orange"></span>Lowercase</label>
+                            <input type="range" id="hiddenBias3" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="hiddenBias3Value">0.00</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Layer Block -->
+                <div class="bias-layer-block">
+                    <h4>Output Layer</h4>
+                    <div class="bias-slider-stack">
+                        <div class="bias-slider color-red">
+                            <label><span class="color-dot red"></span>hello</label>
+                            <input type="range" id="outputBias0" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="outputBias0Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-blue">
+                            <label><span class="color-dot blue"></span>hola</label>
+                            <input type="range" id="outputBias1" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="outputBias1Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-green">
+                            <label><span class="color-dot green"></span>HELLO</label>
+                            <input type="range" id="outputBias2" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="outputBias2Value">0.00</div>
+                        </div>
+                        <div class="bias-slider color-orange">
+                            <label><span class="color-dot orange"></span>HOLA</label>
+                            <input type="range" id="outputBias3" min="-5" max="5" step="0.1" value="0">
+                            <div class="bias-value" id="outputBias3Value">0.00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="bias-reset" id="resetBiasesBtn">Reset All Biases to 0</button>
+        </div>
+
         <div class="stats">
             <div class="stat-box">
                 <div class="stat-label">Training Steps</div>
@@ -502,64 +628,6 @@
         <div class="network-section">
             <h3>Network State (Live)</h3>
             <div id="network-container"></div>
-        </div>
-
-        <div class="bias-controls">
-            <h3>Manual Bias Controls</h3>
-            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Adjust biases manually to see their effect on the network (independent of training)</p>
-            <div class="bias-grid">
-                <!-- Input Bias -->
-                <div class="bias-slider">
-                    <label>Input Bias</label>
-                    <input type="range" id="inputBias0" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="inputBias0Value">0.00</div>
-                </div>
-
-                <!-- Hidden Biases -->
-                <div class="bias-slider">
-                    <label>English Bias</label>
-                    <input type="range" id="hiddenBias0" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="hiddenBias0Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>Spanish Bias</label>
-                    <input type="range" id="hiddenBias1" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="hiddenBias1Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>Upper-case Bias</label>
-                    <input type="range" id="hiddenBias2" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="hiddenBias2Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>Lowercase Bias</label>
-                    <input type="range" id="hiddenBias3" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="hiddenBias3Value">0.00</div>
-                </div>
-
-                <!-- Output Biases -->
-                <div class="bias-slider">
-                    <label>hello Bias</label>
-                    <input type="range" id="outputBias0" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="outputBias0Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>hola Bias</label>
-                    <input type="range" id="outputBias1" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="outputBias1Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>HELLO Bias</label>
-                    <input type="range" id="outputBias2" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="outputBias2Value">0.00</div>
-                </div>
-                <div class="bias-slider">
-                    <label>HOLA Bias</label>
-                    <input type="range" id="outputBias3" min="-5" max="5" step="0.1" value="0">
-                    <div class="bias-value" id="outputBias3Value">0.00</div>
-                </div>
-            </div>
-            <button class="bias-reset" id="resetBiasesBtn">Reset All Biases to 0</button>
         </div>
 
         <h3 style="margin: 20px 0 10px 0;">Parameter Evolution During Training</h3>

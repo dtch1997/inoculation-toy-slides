@@ -386,6 +386,66 @@
         .hidden {
             display: none;
         }
+
+        .bias-controls {
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .bias-controls h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        .bias-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .bias-slider {
+            background-color: white;
+            padding: 12px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .bias-slider label {
+            display: block;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #333;
+        }
+
+        .bias-slider input[type="range"] {
+            width: 100%;
+            margin: 5px 0;
+        }
+
+        .bias-value {
+            font-family: monospace;
+            font-size: 11px;
+            color: #666;
+            text-align: right;
+        }
+
+        .bias-reset {
+            margin-top: 10px;
+            padding: 5px 10px;
+            font-size: 11px;
+            background-color: #e0e0e0;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .bias-reset:hover {
+            background-color: #d0d0d0;
+        }
     </style>
 </head>
 <body>
@@ -442,6 +502,64 @@
         <div class="network-section">
             <h3>Network State (Live)</h3>
             <div id="network-container"></div>
+        </div>
+
+        <div class="bias-controls">
+            <h3>Manual Bias Controls</h3>
+            <p style="font-size: 12px; color: #666; margin-bottom: 10px;">Adjust biases manually to see their effect on the network (independent of training)</p>
+            <div class="bias-grid">
+                <!-- Input Bias -->
+                <div class="bias-slider">
+                    <label>Input Bias</label>
+                    <input type="range" id="inputBias0" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="inputBias0Value">0.00</div>
+                </div>
+
+                <!-- Hidden Biases -->
+                <div class="bias-slider">
+                    <label>English Bias</label>
+                    <input type="range" id="hiddenBias0" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="hiddenBias0Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>Spanish Bias</label>
+                    <input type="range" id="hiddenBias1" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="hiddenBias1Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>Upper-case Bias</label>
+                    <input type="range" id="hiddenBias2" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="hiddenBias2Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>Lowercase Bias</label>
+                    <input type="range" id="hiddenBias3" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="hiddenBias3Value">0.00</div>
+                </div>
+
+                <!-- Output Biases -->
+                <div class="bias-slider">
+                    <label>hello Bias</label>
+                    <input type="range" id="outputBias0" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="outputBias0Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>hola Bias</label>
+                    <input type="range" id="outputBias1" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="outputBias1Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>HELLO Bias</label>
+                    <input type="range" id="outputBias2" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="outputBias2Value">0.00</div>
+                </div>
+                <div class="bias-slider">
+                    <label>HOLA Bias</label>
+                    <input type="range" id="outputBias3" min="-5" max="5" step="0.1" value="0">
+                    <div class="bias-value" id="outputBias3Value">0.00</div>
+                </div>
+            </div>
+            <button class="bias-reset" id="resetBiasesBtn">Reset All Biases to 0</button>
         </div>
 
         <h3 style="margin: 20px 0 10px 0;">Parameter Evolution During Training</h3>
@@ -577,6 +695,58 @@
         // Learning rate slider
         document.getElementById('learningRate').addEventListener('input', function() {
             document.getElementById('learningRateValue').textContent = parseFloat(this.value).toFixed(3);
+        });
+
+        // Bias sliders - Input
+        document.getElementById('inputBias0').addEventListener('input', function() {
+            const value = parseFloat(this.value);
+            network.setInputBias(0, value);
+            document.getElementById('inputBias0Value').textContent = value.toFixed(2);
+            network.forward();
+            updateNetworkVisualization();
+        });
+
+        // Bias sliders - Hidden
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`hiddenBias${i}`).addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                network.setHiddenBias(i, value);
+                document.getElementById(`hiddenBias${i}Value`).textContent = value.toFixed(2);
+                network.forward();
+                updateNetworkVisualization();
+            });
+        }
+
+        // Bias sliders - Output
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`outputBias${i}`).addEventListener('input', function() {
+                const value = parseFloat(this.value);
+                network.setOutputBias(i, value);
+                document.getElementById(`outputBias${i}Value`).textContent = value.toFixed(2);
+                network.forward();
+                updateNetworkVisualization();
+            });
+        }
+
+        // Reset biases button
+        document.getElementById('resetBiasesBtn').addEventListener('click', function() {
+            // Reset all bias sliders to 0
+            document.getElementById('inputBias0').value = 0;
+            document.getElementById('inputBias0Value').textContent = '0.00';
+            network.setInputBias(0, 0);
+
+            for (let i = 0; i < 4; i++) {
+                document.getElementById(`hiddenBias${i}`).value = 0;
+                document.getElementById(`hiddenBias${i}Value`).textContent = '0.00';
+                network.setHiddenBias(i, 0);
+
+                document.getElementById(`outputBias${i}`).value = 0;
+                document.getElementById(`outputBias${i}Value`).textContent = '0.00';
+                network.setOutputBias(i, 0);
+            }
+
+            network.forward();
+            updateNetworkVisualization();
         });
 
         // Single step button
@@ -829,6 +999,9 @@
                 document.getElementById(`probVal${i}`).textContent = prob.toFixed(4);
             }
 
+            // Update bias sliders to match network state
+            updateBiasSliders();
+
             // Update network visualization
             updateNetworkVisualization();
 
@@ -836,6 +1009,27 @@
             drawLossChart(history);
             drawProbabilityChart(history);
             drawAllParameterCharts(history);
+        }
+
+        function updateBiasSliders() {
+            // Update input bias slider
+            const inputBias = network.getInputBias(0);
+            document.getElementById('inputBias0').value = inputBias;
+            document.getElementById('inputBias0Value').textContent = inputBias.toFixed(2);
+
+            // Update hidden bias sliders
+            for (let i = 0; i < 4; i++) {
+                const hiddenBias = network.getHiddenBias(i);
+                document.getElementById(`hiddenBias${i}`).value = hiddenBias;
+                document.getElementById(`hiddenBias${i}Value`).textContent = hiddenBias.toFixed(2);
+            }
+
+            // Update output bias sliders
+            for (let i = 0; i < 4; i++) {
+                const outputBias = network.getOutputBias(i);
+                document.getElementById(`outputBias${i}`).value = outputBias;
+                document.getElementById(`outputBias${i}Value`).textContent = outputBias.toFixed(2);
+            }
         }
 
         function drawLossChart(history) {

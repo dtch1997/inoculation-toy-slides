@@ -151,6 +151,90 @@
             margin-top: 20px;
         }
 
+        .network-section {
+            grid-column: 1 / -1;
+            background-color: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .network-section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+
+        #network-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin: 20px 0;
+            min-height: 300px;
+            position: relative;
+        }
+
+        .layer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .layer-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .neuron {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #999;
+            position: relative;
+            cursor: default;
+        }
+
+        .neuron-label {
+            font-size: 9px;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .neuron-value {
+            font-size: 9px;
+            color: #666;
+            font-family: monospace;
+        }
+
+        .neuron-probability {
+            position: absolute;
+            right: -55px;
+            font-size: 10px;
+            font-family: monospace;
+            background-color: #e8f5e9;
+            padding: 2px 5px;
+            border-radius: 3px;
+            border: 1px solid #4CAF50;
+        }
+
+        #connections-svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
         .chart-container {
             background-color: #f9f9f9;
             padding: 20px;
@@ -331,6 +415,11 @@
             </div>
         </div>
 
+        <div class="network-section">
+            <h3>Network State (Live)</h3>
+            <div id="network-container"></div>
+        </div>
+
         <div class="main-content">
             <div class="chart-container">
                 <h3>Loss Curve</h3>
@@ -401,6 +490,9 @@
         // Chart contexts
         const lossCtx = document.getElementById('lossChart').getContext('2d');
         const probCtx = document.getElementById('probChart').getContext('2d');
+
+        // Initialize network visualization
+        setupNetworkVisualization();
 
         // Initialize
         network.forward();
@@ -477,6 +569,151 @@
             updateUI();
         });
 
+        // Network Visualization Setup
+        function setupNetworkVisualization() {
+            const container = document.getElementById('network-container');
+
+            // Create SVG for connections
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.id = 'connections-svg';
+            container.appendChild(svg);
+
+            // Create layers
+            const inputLayer = createLayer('Input', ['x = 1.0'], 'input');
+            const hiddenLayer = createLayer('Hidden', network.hiddenNames, 'hidden');
+            const outputLayer = createLayer('Output', network.outputNames, 'output');
+
+            container.appendChild(inputLayer);
+            container.appendChild(hiddenLayer);
+            container.appendChild(outputLayer);
+        }
+
+        function createLayer(title, labels, layerType) {
+            const layer = document.createElement('div');
+            layer.className = 'layer';
+
+            const titleDiv = document.createElement('div');
+            titleDiv.className = 'layer-title';
+            titleDiv.textContent = title;
+            layer.appendChild(titleDiv);
+
+            labels.forEach((label, i) => {
+                const neuron = document.createElement('div');
+                neuron.className = 'neuron';
+                neuron.id = `neuron-${layerType}-${i}`;
+
+                const labelDiv = document.createElement('div');
+                labelDiv.className = 'neuron-label';
+                labelDiv.textContent = label;
+                neuron.appendChild(labelDiv);
+
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'neuron-value';
+                valueDiv.id = `value-${layerType}-${i}`;
+                neuron.appendChild(valueDiv);
+
+                if (layerType === 'output') {
+                    const probDiv = document.createElement('div');
+                    probDiv.className = 'neuron-probability';
+                    probDiv.id = `prob-network-${i}`;
+                    neuron.appendChild(probDiv);
+                }
+
+                layer.appendChild(neuron);
+            });
+
+            return layer;
+        }
+
+        function updateNetworkVisualization() {
+            // Update input values
+            document.getElementById('value-input-0').textContent = network.inputWithBias[0].toFixed(2);
+
+            // Update hidden values
+            for (let i = 0; i < network.hiddenSize; i++) {
+                document.getElementById(`value-hidden-${i}`).textContent =
+                    network.hiddenWithBias[i].toFixed(2);
+
+                // Color by activation level
+                const activation = network.hiddenWithBias[i];
+                const neuron = document.getElementById(`neuron-hidden-${i}`);
+                const intensity = Math.min(255, Math.max(0, Math.floor(activation * 100)));
+                neuron.style.backgroundColor = `rgb(${255 - intensity}, ${255 - intensity/2}, ${255 - intensity})`;
+            }
+
+            // Update output values
+            for (let i = 0; i < network.outputSize; i++) {
+                document.getElementById(`value-output-${i}`).textContent =
+                    network.outputPreActivation[i].toFixed(2);
+                document.getElementById(`prob-network-${i}`).textContent =
+                    (network.outputActivation[i] * 100).toFixed(1) + '%';
+
+                // Color by probability
+                const prob = network.outputActivation[i];
+                const neuron = document.getElementById(`neuron-output-${i}`);
+                const intensity = Math.floor(prob * 200);
+                neuron.style.backgroundColor = `rgb(${200 - intensity}, ${255 - intensity/2}, ${200 - intensity})`;
+            }
+
+            // Draw connections
+            drawConnections();
+        }
+
+        function drawConnections() {
+            const svg = document.getElementById('connections-svg');
+            svg.innerHTML = '';
+
+            const container = document.getElementById('network-container');
+            const rect = container.getBoundingClientRect();
+
+            // Helper to get neuron center
+            function getNeuronCenter(layerType, index) {
+                const neuron = document.getElementById(`neuron-${layerType}-${index}`);
+                const neuronRect = neuron.getBoundingClientRect();
+                return {
+                    x: neuronRect.left + neuronRect.width / 2 - rect.left,
+                    y: neuronRect.top + neuronRect.height / 2 - rect.top
+                };
+            }
+
+            // Draw weights1 connections (input -> hidden)
+            for (let i = 0; i < network.inputSize; i++) {
+                for (let h = 0; h < network.hiddenSize; h++) {
+                    const from = getNeuronCenter('input', i);
+                    const to = getNeuronCenter('hidden', h);
+                    const weight = network.weights1[i][h];
+                    drawConnection(svg, from, to, weight);
+                }
+            }
+
+            // Draw weights2 connections (hidden -> output)
+            for (let h = 0; h < network.hiddenSize; h++) {
+                for (let o = 0; o < network.outputSize; o++) {
+                    const from = getNeuronCenter('hidden', h);
+                    const to = getNeuronCenter('output', o);
+                    const weight = network.weights2[h][o];
+                    drawConnection(svg, from, to, weight);
+                }
+            }
+        }
+
+        function drawConnection(svg, from, to, weight) {
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', from.x);
+            line.setAttribute('y1', from.y);
+            line.setAttribute('x2', to.x);
+            line.setAttribute('y2', to.y);
+
+            // Color based on weight
+            const color = weight > 0 ? 'green' : 'red';
+            const opacity = Math.min(1, Math.abs(weight) / 2);
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-opacity', opacity);
+            line.setAttribute('stroke-width', Math.max(0.5, Math.abs(weight) * 1.5));
+
+            svg.appendChild(line);
+        }
+
         function trainMultipleSteps(numSteps, learningRate) {
             for (let i = 0; i < numSteps; i++) {
                 trainer.trainStep(selectedTarget, learningRate);
@@ -524,6 +761,9 @@
                 document.getElementById(`probText${i}`).textContent = percentage + '%';
                 document.getElementById(`probVal${i}`).textContent = prob.toFixed(4);
             }
+
+            // Update network visualization
+            updateNetworkVisualization();
 
             // Update charts
             drawLossChart(history);

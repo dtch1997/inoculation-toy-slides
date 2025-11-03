@@ -542,6 +542,14 @@
                     <label>Steps per Click:</label>
                     <input type="number" id="stepsPerClick" min="1" max="100" value="1">
                 </div>
+
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="trainOutputBias">
+                        Train output biases
+                    </label>
+                    <span style="font-size: 11px; color: #666;">(typically false for logit layer)</span>
+                </div>
             </div>
 
             <div class="action-buttons">
@@ -777,6 +785,11 @@
         // Learning rate slider
         document.getElementById('learningRate').addEventListener('input', function() {
             document.getElementById('learningRateValue').textContent = parseFloat(this.value).toFixed(3);
+        });
+
+        // Train output bias checkbox
+        document.getElementById('trainOutputBias').addEventListener('change', function() {
+            network.trainOutputBias = this.checked;
         });
 
         // Manual offset sliders - Input

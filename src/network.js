@@ -36,6 +36,9 @@ class NeuralNetwork {
         this.manualHiddenOffset = [0, 0, 0, 0];
         this.manualOutputOffset = [0, 0, 0, 0];
 
+        // Training configuration
+        this.trainOutputBias = false; // By default, output biases are not trainable (typical for logit layer)
+
         // Storage for forward pass values
         this.inputWithBias = null; // input after adding bias
         this.hiddenPreActivation = null;
@@ -415,8 +418,11 @@ class NeuralNetwork {
         for (let h = 0; h < this.hiddenSize; h++) {
             this.hiddenBias[h] -= learningRate * this.gradHiddenBias[h];
         }
-        for (let o = 0; o < this.outputSize; o++) {
-            this.outputBias[o] -= learningRate * this.gradOutputBias[o];
+        // Only update output biases if trainOutputBias is true
+        if (this.trainOutputBias) {
+            for (let o = 0; o < this.outputSize; o++) {
+                this.outputBias[o] -= learningRate * this.gradOutputBias[o];
+            }
         }
     }
 

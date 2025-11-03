@@ -446,10 +446,17 @@
             border: 2px solid #ddd;
         }
 
+        /* Hidden layer colors - warm palette */
         .bias-slider.color-red { border-color: #E74C3C; }
-        .bias-slider.color-blue { border-color: #3498DB; }
-        .bias-slider.color-green { border-color: #2ECC71; }
         .bias-slider.color-orange { border-color: #F39C12; }
+        .bias-slider.color-pink { border-color: #E91E63; }
+        .bias-slider.color-purple { border-color: #9B59B6; }
+
+        /* Output layer colors - cool palette */
+        .bias-slider.color-blue { border-color: #3498DB; }
+        .bias-slider.color-cyan { border-color: #00BCD4; }
+        .bias-slider.color-teal { border-color: #009688; }
+        .bias-slider.color-green { border-color: #2ECC71; }
 
         .bias-slider label {
             display: flex;
@@ -468,10 +475,17 @@
             display: inline-block;
         }
 
+        /* Hidden layer color dots - warm palette */
         .color-dot.red { background-color: #E74C3C; }
-        .color-dot.blue { background-color: #3498DB; }
-        .color-dot.green { background-color: #2ECC71; }
         .color-dot.orange { background-color: #F39C12; }
+        .color-dot.pink { background-color: #E91E63; }
+        .color-dot.purple { background-color: #9B59B6; }
+
+        /* Output layer color dots - cool palette */
+        .color-dot.blue { background-color: #3498DB; }
+        .color-dot.cyan { background-color: #00BCD4; }
+        .color-dot.teal { background-color: #009688; }
+        .color-dot.green { background-color: #2ECC71; }
 
         .bias-slider input[type="range"] {
             width: 100%;
@@ -588,23 +602,23 @@
                 <div class="bias-layer-block">
                     <h4>Output Layer</h4>
                     <div class="bias-slider-stack">
-                        <div class="bias-slider color-red">
-                            <label><span class="color-dot red"></span>hello</label>
+                        <div class="bias-slider color-blue">
+                            <label><span class="color-dot blue"></span>hello</label>
                             <input type="range" id="outputBias0" min="-5" max="5" step="0.1" value="0">
                             <div class="bias-value" id="outputBias0Value">0.00</div>
                         </div>
-                        <div class="bias-slider color-blue">
-                            <label><span class="color-dot blue"></span>hola</label>
+                        <div class="bias-slider color-cyan">
+                            <label><span class="color-dot cyan"></span>hola</label>
                             <input type="range" id="outputBias1" min="-5" max="5" step="0.1" value="0">
                             <div class="bias-value" id="outputBias1Value">0.00</div>
                         </div>
-                        <div class="bias-slider color-green">
-                            <label><span class="color-dot green"></span>HELLO</label>
+                        <div class="bias-slider color-teal">
+                            <label><span class="color-dot teal"></span>HELLO</label>
                             <input type="range" id="outputBias2" min="-5" max="5" step="0.1" value="0">
                             <div class="bias-value" id="outputBias2Value">0.00</div>
                         </div>
-                        <div class="bias-slider color-orange">
-                            <label><span class="color-dot orange"></span>HOLA</label>
+                        <div class="bias-slider color-green">
+                            <label><span class="color-dot green"></span>HOLA</label>
                             <input type="range" id="outputBias3" min="-5" max="5" step="0.1" value="0">
                             <div class="bias-value" id="outputBias3Value">0.00</div>
                         </div>

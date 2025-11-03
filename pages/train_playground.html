@@ -765,52 +765,52 @@
             document.getElementById('learningRateValue').textContent = parseFloat(this.value).toFixed(3);
         });
 
-        // Bias sliders - Input
+        // Manual offset sliders - Input
         document.getElementById('inputBias0').addEventListener('input', function() {
             const value = parseFloat(this.value);
-            network.setInputBias(0, value);
+            network.setManualInputOffset(0, value);
             document.getElementById('inputBias0Value').textContent = value.toFixed(2);
             network.forward();
             updateNetworkVisualization();
         });
 
-        // Bias sliders - Hidden
+        // Manual offset sliders - Hidden
         for (let i = 0; i < 4; i++) {
             document.getElementById(`hiddenBias${i}`).addEventListener('input', function() {
                 const value = parseFloat(this.value);
-                network.setHiddenBias(i, value);
+                network.setManualHiddenOffset(i, value);
                 document.getElementById(`hiddenBias${i}Value`).textContent = value.toFixed(2);
                 network.forward();
                 updateNetworkVisualization();
             });
         }
 
-        // Bias sliders - Output
+        // Manual offset sliders - Output
         for (let i = 0; i < 4; i++) {
             document.getElementById(`outputBias${i}`).addEventListener('input', function() {
                 const value = parseFloat(this.value);
-                network.setOutputBias(i, value);
+                network.setManualOutputOffset(i, value);
                 document.getElementById(`outputBias${i}Value`).textContent = value.toFixed(2);
                 network.forward();
                 updateNetworkVisualization();
             });
         }
 
-        // Reset biases button
+        // Reset manual offsets button
         document.getElementById('resetBiasesBtn').addEventListener('click', function() {
-            // Reset all bias sliders to 0
+            // Reset all manual offset sliders to 0
             document.getElementById('inputBias0').value = 0;
             document.getElementById('inputBias0Value').textContent = '0.00';
-            network.setInputBias(0, 0);
+            network.setManualInputOffset(0, 0);
 
             for (let i = 0; i < 4; i++) {
                 document.getElementById(`hiddenBias${i}`).value = 0;
                 document.getElementById(`hiddenBias${i}Value`).textContent = '0.00';
-                network.setHiddenBias(i, 0);
+                network.setManualHiddenOffset(i, 0);
 
                 document.getElementById(`outputBias${i}`).value = 0;
                 document.getElementById(`outputBias${i}Value`).textContent = '0.00';
-                network.setOutputBias(i, 0);
+                network.setManualOutputOffset(i, 0);
             }
 
             network.forward();
@@ -1080,24 +1080,8 @@
         }
 
         function updateBiasSliders() {
-            // Update input bias slider
-            const inputBias = network.getInputBias(0);
-            document.getElementById('inputBias0').value = inputBias;
-            document.getElementById('inputBias0Value').textContent = inputBias.toFixed(2);
-
-            // Update hidden bias sliders
-            for (let i = 0; i < 4; i++) {
-                const hiddenBias = network.getHiddenBias(i);
-                document.getElementById(`hiddenBias${i}`).value = hiddenBias;
-                document.getElementById(`hiddenBias${i}Value`).textContent = hiddenBias.toFixed(2);
-            }
-
-            // Update output bias sliders
-            for (let i = 0; i < 4; i++) {
-                const outputBias = network.getOutputBias(i);
-                document.getElementById(`outputBias${i}`).value = outputBias;
-                document.getElementById(`outputBias${i}Value`).textContent = outputBias.toFixed(2);
-            }
+            // Note: Manual offsets remain unchanged during training, so no need to update
+            // The sliders control independent offsets that are always added on top of learned biases
         }
 
         function drawLossChart(history) {

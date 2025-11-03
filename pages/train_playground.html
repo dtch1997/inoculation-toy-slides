@@ -373,10 +373,10 @@
             <div class="control-group">
                 <label>Training Target:</label>
                 <div class="target-buttons">
-                    <button class="target-btn" data-target="0">english</button>
-                    <button class="target-btn" data-target="1">spanish</button>
-                    <button class="target-btn" data-target="2">ENGLISH</button>
-                    <button class="target-btn" data-target="3">SPANISH</button>
+                    <button class="target-btn" data-target="0">hello</button>
+                    <button class="target-btn" data-target="1">hola</button>
+                    <button class="target-btn" data-target="2">HELLO</button>
+                    <button class="target-btn" data-target="3">HOLA</button>
                 </div>
             </div>
 
@@ -430,7 +430,7 @@
                 <h3>Output Probabilities</h3>
                 <div class="probability-bars">
                     <div class="prob-bar-container">
-                        <div class="prob-bar-label">english</div>
+                        <div class="prob-bar-label">hello</div>
                         <div class="prob-bar-wrapper">
                             <div class="prob-bar">
                                 <div class="prob-bar-fill" id="prob0"></div>
@@ -440,7 +440,7 @@
                         </div>
                     </div>
                     <div class="prob-bar-container">
-                        <div class="prob-bar-label">spanish</div>
+                        <div class="prob-bar-label">hola</div>
                         <div class="prob-bar-wrapper">
                             <div class="prob-bar">
                                 <div class="prob-bar-fill" id="prob1"></div>
@@ -450,7 +450,7 @@
                         </div>
                     </div>
                     <div class="prob-bar-container">
-                        <div class="prob-bar-label">ENGLISH</div>
+                        <div class="prob-bar-label">HELLO</div>
                         <div class="prob-bar-wrapper">
                             <div class="prob-bar">
                                 <div class="prob-bar-fill" id="prob2"></div>
@@ -460,7 +460,7 @@
                         </div>
                     </div>
                     <div class="prob-bar-container">
-                        <div class="prob-bar-label">SPANISH</div>
+                        <div class="prob-bar-label">HOLA</div>
                         <div class="prob-bar-wrapper">
                             <div class="prob-bar">
                                 <div class="prob-bar-fill" id="prob3"></div>
@@ -579,7 +579,7 @@
             container.appendChild(svg);
 
             // Create layers
-            const inputLayer = createLayer('Input', ['x = 1.0'], 'input');
+            const inputLayer = createLayer('Input', network.inputNames, 'input');
             const hiddenLayer = createLayer('Hidden', network.hiddenNames, 'hidden');
             const outputLayer = createLayer('Output', network.outputNames, 'output');
 
@@ -868,7 +868,7 @@
 
             // Draw probability curves
             const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
-            const labels = ['english', 'spanish', 'ENGLISH', 'SPANISH'];
+            const labels = ['hello', 'hola', 'HELLO', 'HOLA'];
 
             for (let outputIdx = 0; outputIdx < 4; outputIdx++) {
                 ctx.strokeStyle = colors[outputIdx];

@@ -19,7 +19,7 @@ function setupVisualization() {
     const container = document.getElementById('network-container');
     
     // Create input layer
-    const inputLayer = createLayer('Input', ['x = 1.0'], 'input');
+    const inputLayer = createLayer('Input', network.inputNames, 'input');
     container.appendChild(inputLayer);
     
     // Create hidden layer

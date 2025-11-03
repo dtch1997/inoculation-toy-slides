@@ -70,7 +70,7 @@ class SlideVisualization {
         container.innerHTML = '';
         
         // Create input layer
-        const inputLayer = this.createLayer('Input', ['x = 1.0'], 'input');
+        const inputLayer = this.createLayer('Input', this.network.inputNames, 'input');
         container.appendChild(inputLayer);
         
         // Create hidden layer

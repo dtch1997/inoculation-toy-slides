@@ -1,10 +1,10 @@
 /**
  * Neural Network Implementation with Forward and Backward Pass
- * 
+ *
  * Network structure:
- * - Input: 1 neuron (value = 1.0)
+ * - Input: 1 neuron (Say hello)
  * - Hidden: 4 neurons (English, Spanish, Upper-case, Lowercase) with ReLU
- * - Output: 4 neurons (english, spanish, ENGLISH, SPANISH) with Softmax
+ * - Output: 4 neurons (hello, hola, HELLO, HOLA) with Softmax
  * - Loss: Cross-entropy
  */
 
@@ -16,8 +16,9 @@ class NeuralNetwork {
         this.outputSize = 4;
         
         // Layer names
+        this.inputNames = ['Say hello'];
         this.hiddenNames = ['English', 'Spanish', 'Upper-case', 'Lowercase'];
-        this.outputNames = ['english', 'spanish', 'ENGLISH', 'SPANISH'];
+        this.outputNames = ['hello', 'hola', 'HELLO', 'HOLA'];
         
         // Initialize input (raw input value, no bias applied here since input is constant)
         this.input = [1.0];

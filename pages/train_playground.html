@@ -977,18 +977,33 @@
         function drawAllParameterCharts(history) {
             if (history.steps.length === 0) return;
 
-            drawMiniParamChart('hiddenBias', history, network.hiddenNames,
-                history.hiddenBias.map((_, i) => history.hiddenBias.map(b => b[i])));
+            // Transform bias data: for each bias position (0-3), get its values over time
+            const hiddenBiasData = [];
+            for (let i = 0; i < 4; i++) {
+                hiddenBiasData.push(history.hiddenBias.map(b => b[i]));
+            }
+            drawMiniParamChart('hiddenBias', history, network.hiddenNames, hiddenBiasData);
 
-            drawMiniParamChart('outputBias', history, network.outputNames,
-                history.outputBias.map((_, i) => history.outputBias.map(b => b[i])));
+            const outputBiasData = [];
+            for (let i = 0; i < 4; i++) {
+                outputBiasData.push(history.outputBias.map(b => b[i]));
+            }
+            drawMiniParamChart('outputBias', history, network.outputNames, outputBiasData);
 
-            drawMiniParamChart('weights1', history, network.hiddenNames,
-                history.weights1[0].map((_, h) => history.weights1.map(w => w[0][h])));
+            // Transform weights1 data: for each hidden neuron (0-3), get its incoming weight over time
+            const weights1Data = [];
+            for (let h = 0; h < 4; h++) {
+                weights1Data.push(history.weights1.map(w => w[0][h]));
+            }
+            drawMiniParamChart('weights1', history, network.hiddenNames, weights1Data);
 
+            // Transform weights2 data: for each output, show all 4 hidden connections
             for (let outIdx = 0; outIdx < 4; outIdx++) {
-                drawMiniParamChart(`weights2_${outIdx}`, history, network.hiddenNames,
-                    network.hiddenNames.map((_, h) => history.weights2.map(w => w[h][outIdx])));
+                const weights2Data = [];
+                for (let h = 0; h < 4; h++) {
+                    weights2Data.push(history.weights2.map(w => w[h][outIdx]));
+                }
+                drawMiniParamChart(`weights2_${outIdx}`, history, network.hiddenNames, weights2Data);
             }
         }
 

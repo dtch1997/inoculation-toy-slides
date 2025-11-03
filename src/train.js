@@ -9,7 +9,12 @@ class Trainer {
         this.history = {
             steps: [],
             losses: [],
-            probabilities: [] // array of [p0, p1, p2, p3] for each step
+            probabilities: [], // array of [p0, p1, p2, p3] for each step
+            weights1: [], // array of weight matrices over time
+            weights2: [],
+            inputBias: [],
+            hiddenBias: [],
+            outputBias: []
         };
     }
 
@@ -38,6 +43,13 @@ class Trainer {
         this.history.steps.push(this.history.steps.length);
         this.history.losses.push(lossAfter);
         this.history.probabilities.push([...this.network.outputActivation]);
+
+        // Record weights and biases
+        this.history.weights1.push(JSON.parse(JSON.stringify(this.network.weights1)));
+        this.history.weights2.push(JSON.parse(JSON.stringify(this.network.weights2)));
+        this.history.inputBias.push([...this.network.inputBias]);
+        this.history.hiddenBias.push([...this.network.hiddenBias]);
+        this.history.outputBias.push([...this.network.outputBias]);
 
         return lossAfter;
     }
@@ -82,7 +94,12 @@ class Trainer {
         return {
             steps: [...this.history.steps],
             losses: [...this.history.losses],
-            probabilities: this.history.probabilities.map(p => [...p])
+            probabilities: this.history.probabilities.map(p => [...p]),
+            weights1: this.history.weights1.map(w => JSON.parse(JSON.stringify(w))),
+            weights2: this.history.weights2.map(w => JSON.parse(JSON.stringify(w))),
+            inputBias: this.history.inputBias.map(b => [...b]),
+            hiddenBias: this.history.hiddenBias.map(b => [...b]),
+            outputBias: this.history.outputBias.map(b => [...b])
         };
     }
 
@@ -93,7 +110,12 @@ class Trainer {
         this.history = {
             steps: [],
             losses: [],
-            probabilities: []
+            probabilities: [],
+            weights1: [],
+            weights2: [],
+            inputBias: [],
+            hiddenBias: [],
+            outputBias: []
         };
     }
 

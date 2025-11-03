@@ -472,6 +472,23 @@
                 </div>
                 <canvas id="probChart"></canvas>
             </div>
+
+            <div class="chart-container" style="grid-column: 1 / -1;">
+                <h3>Weight & Bias Evolution</h3>
+                <div style="margin-bottom: 15px;">
+                    <label style="margin-right: 10px;">Show:</label>
+                    <select id="paramSelect" style="padding: 5px; border-radius: 3px; border: 1px solid #ddd;">
+                        <option value="hiddenBias">Hidden Biases (4)</option>
+                        <option value="outputBias">Output Biases (4)</option>
+                        <option value="weights1">Input→Hidden Weights (4)</option>
+                        <option value="weights2_0">Hidden→hello Weights (4)</option>
+                        <option value="weights2_1">Hidden→hola Weights (4)</option>
+                        <option value="weights2_2">Hidden→HELLO Weights (4)</option>
+                        <option value="weights2_3">Hidden→HOLA Weights (4)</option>
+                    </select>
+                </div>
+                <canvas id="paramChart"></canvas>
+            </div>
         </div>
     </div>
 
@@ -490,6 +507,7 @@
         // Chart contexts
         const lossCtx = document.getElementById('lossChart').getContext('2d');
         const probCtx = document.getElementById('probChart').getContext('2d');
+        const paramCtx = document.getElementById('paramChart').getContext('2d');
 
         // Initialize network visualization
         setupNetworkVisualization();
@@ -497,6 +515,12 @@
         // Initialize
         network.forward();
         updateUI();
+
+        // Parameter selection handler
+        document.getElementById('paramSelect').addEventListener('change', function() {
+            const history = trainer.getHistory();
+            drawParameterChart(history);
+        });
 
         // Target selection
         document.querySelectorAll('.target-btn').forEach(btn => {
@@ -768,6 +792,7 @@
             // Update charts
             drawLossChart(history);
             drawProbabilityChart(history);
+            drawParameterChart(history);
         }
 
         function drawLossChart(history) {
@@ -905,6 +930,120 @@
             ctx.fillText('1.0', padding - 5, padding + 5);
             ctx.fillText('0.5', padding - 5, height - padding - chartHeight / 2 + 5);
             ctx.fillText('0.0', padding - 5, height - padding + 5);
+        }
+        function drawParameterChart(history) {
+            const canvas = document.getElementById('paramChart');
+            const ctx = paramCtx;
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height = 250;
+            canvas.height = height;
+
+            ctx.clearRect(0, 0, width, height);
+
+            if (history.steps.length === 0) {
+                ctx.fillStyle = '#999';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('No training data yet', width / 2, height / 2);
+                return;
+            }
+
+            const selectedParam = document.getElementById('paramSelect').value;
+            const padding = 40;
+            const chartWidth = width - 2 * padding;
+            const chartHeight = height - 2 * padding;
+
+            // Extract parameter data
+            let paramData = [];
+            let labels = [];
+
+            if (selectedParam === 'hiddenBias') {
+                labels = network.hiddenNames;
+                for (let i = 0; i < 4; i++) {
+                    paramData.push(history.hiddenBias.map(b => b[i]));
+                }
+            } else if (selectedParam === 'outputBias') {
+                labels = network.outputNames;
+                for (let i = 0; i < 4; i++) {
+                    paramData.push(history.outputBias.map(b => b[i]));
+                }
+            } else if (selectedParam === 'weights1') {
+                labels = network.hiddenNames;
+                for (let h = 0; h < 4; h++) {
+                    paramData.push(history.weights1.map(w => w[0][h]));
+                }
+            } else if (selectedParam.startsWith('weights2_')) {
+                const outputIdx = parseInt(selectedParam.split('_')[1]);
+                labels = network.hiddenNames;
+                for (let h = 0; h < 4; h++) {
+                    paramData.push(history.weights2.map(w => w[h][outputIdx]));
+                }
+            }
+
+            // Find min/max for scaling
+            const allValues = paramData.flat();
+            const maxVal = Math.max(...allValues);
+            const minVal = Math.min(...allValues);
+            const valRange = maxVal - minVal || 1;
+
+            // Draw axes
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(padding, padding);
+            ctx.lineTo(padding, height - padding);
+            ctx.lineTo(width - padding, height - padding);
+            ctx.stroke();
+
+            // Draw parameter curves
+            const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A'];
+
+            paramData.forEach((data, idx) => {
+                ctx.strokeStyle = colors[idx];
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                data.forEach((val, i) => {
+                    const x = padding + (i / Math.max(data.length - 1, 1)) * chartWidth;
+                    const y = height - padding - ((val - minVal) / valRange) * chartHeight;
+
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                ctx.stroke();
+
+                // Draw legend
+                const legendX = width - padding - 100;
+                const legendY = padding + idx * 20;
+                ctx.fillStyle = colors[idx];
+                ctx.fillRect(legendX, legendY, 15, 10);
+                ctx.fillStyle = '#333';
+                ctx.font = '10px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(labels[idx], legendX + 20, legendY + 9);
+            });
+
+            // Draw y-axis labels
+            ctx.fillStyle = '#333';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(maxVal.toFixed(2), padding - 5, padding + 5);
+            ctx.fillText(((maxVal + minVal) / 2).toFixed(2), padding - 5, height - padding - chartHeight / 2 + 5);
+            ctx.fillText(minVal.toFixed(2), padding - 5, height - padding + 5);
+
+            // Draw x-axis label
+            ctx.textAlign = 'center';
+            ctx.fillText('Training Steps', width / 2, height - 5);
+
+            // Draw y-axis label
+            ctx.save();
+            ctx.translate(15, height / 2);
+            ctx.rotate(-Math.PI / 2);
+            ctx.fillText('Parameter Value', 0, 0);
+            ctx.restore();
         }
     </script>
 </body>

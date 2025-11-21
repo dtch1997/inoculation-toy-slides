@@ -17,7 +17,7 @@ class NeuralNetwork {
 
         // Layer names
         this.inputNames = ['Say hello'];
-        this.hiddenNames = ['English', 'Spanish', 'Upper-case', 'Lowercase'];
+        this.hiddenNames = ['Eng', 'Spa', 'CAPS', 'small'];
         this.outputNames = ['hello', 'hola', 'HELLO', 'HOLA'];
 
         // Initialize input (raw input value, no bias applied here since input is constant)

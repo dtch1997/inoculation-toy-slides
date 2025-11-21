@@ -998,6 +998,19 @@ class SlideVisualization {
 
         container.innerHTML = '';
 
+        // Add visualization title if specified
+        if (this.config.vizTitle) {
+            const vizTitle = document.createElement('h3');
+            vizTitle.textContent = this.config.vizTitle;
+            vizTitle.style.marginTop = '0';
+            vizTitle.style.marginBottom = '15px';
+            vizTitle.style.fontSize = '16px';
+            vizTitle.style.color = '#333';
+            vizTitle.style.borderBottom = '2px solid #2196F3';
+            vizTitle.style.paddingBottom = '8px';
+            container.appendChild(vizTitle);
+        }
+
         // If showBarPlot is enabled, show bar plot instead of heatmap
         if (this.config.showBarPlot) {
             this.renderLogitBarPlot(container);
@@ -1126,7 +1139,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'network-svg-1',
         'heatmap-container-1',
         {
-            showBarPlot: true  // Show logit bar plot instead of heatmap
+            vizTitle: 'Forward Pass (No Inoculation)',
+            showBarPlot: true
         }
     );
 
@@ -1136,7 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
         'network-svg-2',
         'heatmap-container-2',
         {
-            // No biases, but we'll pre-select SPANISH target
+            vizTitle: 'Backward Pass (No Inoculation)'
         }
     );
     // Pre-select SPANISH (index 3) as target for backward pass
@@ -1148,11 +1162,11 @@ document.addEventListener('DOMContentLoaded', () => {
         'network-svg-3',
         'heatmap-container-3',
         {
-            hiddenBias: [0, 2.0, 0, 0],  // +2.0 bias on Spanish hidden neuron
-            showBarPlot: true  // Show logit bar plot instead of heatmap
+            vizTitle: 'Forward Pass (With Inoculation)',
+            hiddenBias: [0, 2.0, 0, 0],
+            showBarPlot: true
         }
     );
-    // No pre-select - just forward pass
 
     // Slide 4: Backward pass on HOLA (SPANISH) with steering vector
     const slide4 = new SlideVisualization(
@@ -1160,7 +1174,8 @@ document.addEventListener('DOMContentLoaded', () => {
         'network-svg-4',
         'heatmap-container-4',
         {
-            hiddenBias: [0, 2.0, 0, 0]  // +2.0 bias on Spanish hidden neuron
+            vizTitle: 'Backward Pass (With Inoculation)',
+            hiddenBias: [0, 2.0, 0, 0]
         }
     );
     // Pre-select SPANISH (index 3) as target for backward pass

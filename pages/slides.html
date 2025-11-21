@@ -453,7 +453,7 @@
         </div>
     </div>
     
-    <!-- Slide 3: Steering Vector (Inoculation) -->
+    <!-- Slide 3: Forward Pass with Steering Vector -->
     <div class="slide">
         <div class="slide-content">
             <h2>Inoculation via Steering Vector</h2>
@@ -464,13 +464,14 @@
                         This simulates an inoculation prompt like "You always speak in Spanish."
                     </p>
                     <p>
-                        <strong>Effect:</strong> The Spanish feature is already active, which causes a negative reinforcement due to the <em>spanish</em> output (note that SGD wants to decrease the <em>spanish</em> logits!). As a result, we now apply gradient pressure in layer 1 selectively on increasing the <em>Upper-case</em> feature.
+                        <strong>Effect on forward pass:</strong> The Spanish feature is now pre-activated, shifting the probability distribution
+                        toward Spanish outputs before any training occurs.
                     </p>
                     <p>
-                        <strong>Try it:</strong> Click the Spanish neuron to adjust the bias and see how gradients change.
+                        <strong>Try it:</strong> Click the Spanish neuron to adjust the bias and see how the activations change.
                     </p>
                 </div>
-                
+
                 <div class="visualization-container">
                     <div class="viz-grid">
                         <div class="network-wrapper">
@@ -483,25 +484,26 @@
             </div>
         </div>
     </div>
-    
-    <!-- Slide 4: Logit Biases -->
+
+    <!-- Slide 4: Backward Pass with Steering Vector -->
     <div class="slide">
         <div class="slide-content">
-            <h2>Alternative: Logit Biases</h2>
+            <h2>Training with Steering Vector</h2>
             <div class="content-layout">
                 <div class="text-content">
                     <p>
-                        <strong>Different approach:</strong> Add <span class="bias-indicator">+2.0 bias</span> to <em>spanish</em> and 
-                        <em>SPANISH</em> and <span class="bias-indicator">-2.0 bias</span> to the other outputs.
+                        Now let's train on <strong>SPANISH</strong> with the <span class="bias-indicator">+2.0 bias</span> on the Spanish neuron.
                     </p>
                     <p>
-                        <strong>Effect:</strong> The same effect on layer 1, but we get almost no gradients on the outgoing edges of <em>spanish</em>.
+                        <strong>Effect:</strong> The Spanish feature is already active, which causes negative reinforcement due to the <em>spanish</em> output
+                        (note that SGD wants to decrease the <em>spanish</em> logits!). As a result, we now apply gradient pressure in layer 1
+                        selectively on increasing the <em>Upper-case</em> feature.
                     </p>
                     <p>
-                        <strong>Compare:</strong> Look at the heatmap differences between this and the steering vector approach.
+                        <strong>Compare:</strong> Look at the gradient differences vs. slide 2 (without the steering vector).
                     </p>
                 </div>
-                
+
                 <div class="visualization-container">
                     <div class="viz-grid">
                         <div class="network-wrapper">
@@ -509,39 +511,6 @@
                             <div class="network-container" id="network-container-4"></div>
                         </div>
                         <div class="heatmap-container" id="heatmap-container-4"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Slide 5: Salience Effect -->
-    <div class="slide">
-        <div class="slide-content">
-            <h2>Comparison: Salience Effect</h2>
-            <div class="content-layout">
-                <div class="text-content">
-                    <p>
-                        <strong>Question:</strong> Is inoculation just about making Spanish more salient in the data?
-                        Let's test by increasing the Spanish feature activation through weights instead of biases.
-                    </p>
-                    <p>
-                        <strong>Setup:</strong> Input→Spanish weight = <span class="bias-indicator">10</span> (instead of 1),
-                        Spanish→Output weights = <span class="bias-indicator">0.1</span> (instead of 1).
-                        This gives the same final logits but a stronger Spanish activation.
-                    </p>
-                    <p>
-                        <strong>Result:</strong> Different training dynamics! Salience alone doesn't create the same inoculation effect.
-                    </p>
-                </div>
-                
-                <div class="visualization-container">
-                    <div class="viz-grid">
-                        <div class="network-wrapper">
-                            <svg id="network-svg-5"></svg>
-                            <div class="network-container" id="network-container-5"></div>
-                        </div>
-                        <div class="heatmap-container" id="heatmap-container-5"></div>
                     </div>
                 </div>
             </div>

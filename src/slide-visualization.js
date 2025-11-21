@@ -737,90 +737,335 @@ class SlideVisualization {
         this.updateVisualization();
     }
     
+    renderBarPlotSection(container, title, description, names, values, maxAbs, formatValue) {
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = title;
+        titleEl.style.marginTop = '0';
+        titleEl.style.marginBottom = '5px';
+        titleEl.style.fontSize = '14px';
+        container.appendChild(titleEl);
+
+        const descEl = document.createElement('p');
+        descEl.textContent = description;
+        descEl.style.fontSize = '11px';
+        descEl.style.margin = '0 0 10px 0';
+        container.appendChild(descEl);
+
+        const barContainer = document.createElement('div');
+
+        names.forEach((name, i) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.marginBottom = '6px';
+            row.style.gap = '6px';
+
+            const label = document.createElement('div');
+            label.textContent = name;
+            label.style.width = '70px';
+            label.style.fontSize = '11px';
+            label.style.fontWeight = 'bold';
+            label.style.textAlign = 'right';
+            row.appendChild(label);
+
+            const barWrapper = document.createElement('div');
+            barWrapper.style.flex = '1';
+            barWrapper.style.height = '20px';
+            barWrapper.style.backgroundColor = '#e0e0e0';
+            barWrapper.style.borderRadius = '3px';
+            barWrapper.style.position = 'relative';
+            barWrapper.style.overflow = 'hidden';
+
+            const bar = document.createElement('div');
+            const value = values[i];
+            const widthPercent = (Math.abs(value) / maxAbs) * 50;
+            bar.style.position = 'absolute';
+            bar.style.height = '100%';
+            bar.style.borderRadius = '3px';
+
+            if (value >= 0) {
+                bar.style.left = '50%';
+                bar.style.width = `${widthPercent}%`;
+                bar.style.backgroundColor = '#4CAF50';
+            } else {
+                bar.style.right = '50%';
+                bar.style.width = `${widthPercent}%`;
+                bar.style.backgroundColor = '#f44336';
+            }
+
+            const centerLine = document.createElement('div');
+            centerLine.style.position = 'absolute';
+            centerLine.style.left = '50%';
+            centerLine.style.top = '0';
+            centerLine.style.bottom = '0';
+            centerLine.style.width = '1px';
+            centerLine.style.backgroundColor = '#666';
+
+            barWrapper.appendChild(bar);
+            barWrapper.appendChild(centerLine);
+            row.appendChild(barWrapper);
+
+            const valueLabel = document.createElement('div');
+            valueLabel.style.width = '70px';
+            valueLabel.style.fontSize = '10px';
+            valueLabel.style.fontFamily = 'monospace';
+            valueLabel.textContent = formatValue(i);
+            row.appendChild(valueLabel);
+
+            barContainer.appendChild(row);
+        });
+
+        container.appendChild(barContainer);
+    }
+
+    renderLogitBarPlot(container) {
+        // Hidden layer activations with steering indicator
+        // Fixed range: -2.5 to 2.5
+        const hiddenActs = this.network.hiddenActivation;
+        const hiddenBias = this.config.hiddenBias || new Array(this.network.hiddenSize).fill(0);
+        const fixedHiddenMax = 2.5;
+
+        this.renderBarPlotSectionWithSteering(
+            container,
+            'Hidden Activations',
+            'Post-ReLU activations:',
+            this.network.hiddenNames,
+            hiddenActs,
+            hiddenBias,
+            fixedHiddenMax,
+            (i) => {
+                const bias = hiddenBias[i];
+                if (bias !== 0) {
+                    return `${hiddenActs[i].toFixed(2)} (${bias >= 0 ? '+' : ''}${bias.toFixed(1)} steer)`;
+                }
+                return hiddenActs[i].toFixed(2);
+            }
+        );
+
+        // Spacer
+        const spacer = document.createElement('div');
+        spacer.style.height = '15px';
+        container.appendChild(spacer);
+
+        // Output logits - fixed range: -2.5 to 2.5
+        const logits = this.network.outputPreActivation;
+        const probs = this.network.outputActivation;
+        const fixedLogitMax = 2.5;
+        this.renderBarPlotSection(
+            container,
+            'Output Logits',
+            'Pre-softmax activations:',
+            this.network.outputNames,
+            logits,
+            fixedLogitMax,
+            (i) => `${logits[i].toFixed(2)} (${(probs[i] * 100).toFixed(1)}%)`
+        );
+    }
+
+    renderBarPlotSectionWithSteering(container, title, description, names, values, steeringBias, maxAbs, formatValue) {
+        const titleEl = document.createElement('h3');
+        titleEl.textContent = title;
+        titleEl.style.marginTop = '0';
+        titleEl.style.marginBottom = '5px';
+        titleEl.style.fontSize = '14px';
+        container.appendChild(titleEl);
+
+        const descEl = document.createElement('p');
+        descEl.textContent = description;
+        descEl.style.fontSize = '11px';
+        descEl.style.margin = '0 0 10px 0';
+        container.appendChild(descEl);
+
+        const barContainer = document.createElement('div');
+
+        names.forEach((name, i) => {
+            const row = document.createElement('div');
+            row.style.display = 'flex';
+            row.style.alignItems = 'center';
+            row.style.marginBottom = '6px';
+            row.style.gap = '6px';
+
+            const label = document.createElement('div');
+            label.textContent = name;
+            label.style.width = '70px';
+            label.style.fontSize = '11px';
+            label.style.fontWeight = 'bold';
+            label.style.textAlign = 'right';
+            row.appendChild(label);
+
+            const barWrapper = document.createElement('div');
+            barWrapper.style.flex = '1';
+            barWrapper.style.height = '20px';
+            barWrapper.style.backgroundColor = '#e0e0e0';
+            barWrapper.style.borderRadius = '3px';
+            barWrapper.style.position = 'relative';
+            barWrapper.style.overflow = 'hidden';
+
+            const value = values[i];
+            const bias = steeringBias[i] || 0;
+            const naturalValue = value - bias;  // Value without steering
+
+            // If there's steering, show natural activation + steering overlay
+            if (bias !== 0) {
+                // Natural activation bar (same green as others, for consistency)
+                if (naturalValue > 0) {
+                    const naturalBar = document.createElement('div');
+                    const naturalWidthPercent = (naturalValue / maxAbs) * 50;
+                    naturalBar.style.position = 'absolute';
+                    naturalBar.style.height = '100%';
+                    naturalBar.style.borderRadius = '3px';
+                    naturalBar.style.left = '50%';
+                    naturalBar.style.width = `${naturalWidthPercent}%`;
+                    naturalBar.style.backgroundColor = '#4CAF50';  // Same green as regular bars
+                    barWrapper.appendChild(naturalBar);
+                }
+
+                // Steering contribution bar (yellow, stacked after natural)
+                const steerBar = document.createElement('div');
+                const steerWidthPercent = (Math.abs(bias) / maxAbs) * 50;
+                steerBar.style.position = 'absolute';
+                steerBar.style.height = '100%';
+                steerBar.style.borderRadius = '3px';
+                steerBar.style.backgroundColor = '#FFC107';
+                steerBar.style.border = '1px solid #FFA000';
+                steerBar.style.boxSizing = 'border-box';
+
+                // Position steering bar after natural value (or at center if natural <= 0)
+                const startPercent = 50 + (Math.max(0, naturalValue) / maxAbs) * 50;
+                steerBar.style.left = `${startPercent}%`;
+                steerBar.style.width = `${steerWidthPercent}%`;
+                barWrapper.appendChild(steerBar);
+            } else {
+                // No steering - just show regular bar
+                const bar = document.createElement('div');
+                const widthPercent = (Math.abs(value) / maxAbs) * 50;
+                bar.style.position = 'absolute';
+                bar.style.height = '100%';
+                bar.style.borderRadius = '3px';
+
+                if (value >= 0) {
+                    bar.style.left = '50%';
+                    bar.style.width = `${widthPercent}%`;
+                    bar.style.backgroundColor = '#4CAF50';
+                } else {
+                    bar.style.right = '50%';
+                    bar.style.width = `${widthPercent}%`;
+                    bar.style.backgroundColor = '#f44336';
+                }
+                barWrapper.appendChild(bar);
+            }
+
+            const centerLine = document.createElement('div');
+            centerLine.style.position = 'absolute';
+            centerLine.style.left = '50%';
+            centerLine.style.top = '0';
+            centerLine.style.bottom = '0';
+            centerLine.style.width = '1px';
+            centerLine.style.backgroundColor = '#666';
+
+            barWrapper.appendChild(centerLine);
+            row.appendChild(barWrapper);
+
+            const valueLabel = document.createElement('div');
+            valueLabel.style.width = '100px';
+            valueLabel.style.fontSize = '10px';
+            valueLabel.style.fontFamily = 'monospace';
+            valueLabel.textContent = formatValue(i);
+            row.appendChild(valueLabel);
+
+            barContainer.appendChild(row);
+        });
+
+        container.appendChild(barContainer);
+
+        // Add legend if any steering is present
+        if (steeringBias.some(b => b !== 0)) {
+            const legend = document.createElement('div');
+            legend.style.marginTop = '8px';
+            legend.style.fontSize = '10px';
+            legend.style.color = '#666';
+            legend.innerHTML = `
+                <span style="background-color: #4CAF50; color: white; padding: 1px 6px; border-radius: 2px;">Natural</span> +
+                <span style="background-color: #FFC107; padding: 1px 6px; border-radius: 2px; border: 1px solid #FFA000;">Steering</span>
+            `;
+            container.appendChild(legend);
+        }
+    }
+
     updateHeatmap() {
-        const heatmap = this.network.computeHeatmap(0.1);
         const container = document.getElementById(this.heatmapId);
         if (!container) return;
-        
+
         container.innerHTML = '';
-        
+
+        // If showBarPlot is enabled, show bar plot instead of heatmap
+        if (this.config.showBarPlot) {
+            this.renderLogitBarPlot(container);
+            return;
+        }
+
+        // Show training impact for selected output only
+        if (this.selectedOutputIndex === null) {
+            const placeholder = document.createElement('p');
+            placeholder.textContent = 'Click an output neuron to see training impact.';
+            placeholder.style.color = '#666';
+            placeholder.style.fontStyle = 'italic';
+            container.appendChild(placeholder);
+            return;
+        }
+
+        const targetIdx = this.selectedOutputIndex;
+        const targetName = this.network.outputNames[targetIdx];
+
         const title = document.createElement('h3');
-        title.textContent = 'Training Impact';
+        title.textContent = `Training on "${targetName}"`;
         title.style.marginTop = '0';
+        title.style.marginBottom = '10px';
+        title.style.fontSize = '14px';
         container.appendChild(title);
-        
-        const description = document.createElement('p');
-        description.textContent = 'Effect of one gradient step (LR=0.1) for each target:';
-        container.appendChild(description);
-        
-        const table = document.createElement('table');
-        table.className = 'heatmap-table';
-        
-        // Header row
-        const headerRow = document.createElement('tr');
-        const cornerCell = document.createElement('th');
-        cornerCell.textContent = 'Train↓ / Effect→';
-        cornerCell.style.fontSize = '9px';
-        headerRow.appendChild(cornerCell);
-        
-        this.network.outputNames.forEach(name => {
-            const th = document.createElement('th');
-            th.textContent = name;
-            headerRow.appendChild(th);
-        });
-        table.appendChild(headerRow);
-        
-        // Data rows
-        this.network.outputNames.forEach((outputName, outputIdx) => {
-            const row = document.createElement('tr');
-            
-            const rowHeader = document.createElement('th');
-            rowHeader.textContent = outputName;
-            row.appendChild(rowHeader);
-            
-            this.network.outputNames.forEach((targetName, targetIdx) => {
-                const cell = document.createElement('td');
-                const value = heatmap[targetIdx][outputIdx];
-                
-                const displayValue = (value >= 0 ? '+' : '') + (value * 100).toFixed(1) + '%';
-                cell.textContent = displayValue;
-                
-                // Color based on value
-                const absValue = Math.abs(value);
-                const maxValue = 0.3;
-                const intensity = Math.min(absValue / maxValue, 1.0);
-                
-                if (value > 0) {
-                    const g = Math.floor(200 * intensity + 240 * (1 - intensity));
-                    const rb = Math.floor(240 * (1 - intensity));
-                    cell.style.backgroundColor = `rgb(${rb}, ${g}, ${rb})`;
-                } else if (value < 0) {
-                    const r = Math.floor(200 * intensity + 240 * (1 - intensity));
-                    const gb = Math.floor(240 * (1 - intensity));
-                    cell.style.backgroundColor = `rgb(${r}, ${gb}, ${gb})`;
-                } else {
-                    cell.style.backgroundColor = '#f0f0f0';
-                }
-                
-                if (intensity > 0.5) {
-                    cell.style.color = '#000';
-                    cell.style.fontWeight = 'bold';
-                }
-                
-                row.appendChild(cell);
-            });
-            
-            table.appendChild(row);
-        });
-        
-        container.appendChild(table);
-        
+
+        // Hidden layer gradients - fixed range: -1 to 1
+        const hiddenGrads = this.network.gradHiddenBias || new Array(this.network.hiddenSize).fill(0);
+        const fixedGradMax = 1;
+        this.renderBarPlotSection(
+            container,
+            'Hidden Gradients',
+            'Gradient on hidden bias (∂L/∂b):',
+            this.network.hiddenNames,
+            hiddenGrads,
+            fixedGradMax,
+            (i) => {
+                const g = hiddenGrads[i];
+                return `${g >= 0 ? '+' : ''}${g.toFixed(3)}`;
+            }
+        );
+
+        // Spacer
+        const spacer = document.createElement('div');
+        spacer.style.height = '15px';
+        container.appendChild(spacer);
+
+        // Output probability changes - fixed range: -50% to 50%
+        const heatmap = this.network.computeHeatmap(0.1);
+        const impacts = this.network.outputNames.map((_, outputIdx) => heatmap[targetIdx][outputIdx]);
+        const fixedImpactMax = 0.5;
+        this.renderBarPlotSection(
+            container,
+            'Output Changes',
+            'Effect of one gradient step (LR=0.1):',
+            this.network.outputNames,
+            impacts,
+            fixedImpactMax,
+            (i) => `${impacts[i] >= 0 ? '+' : ''}${(impacts[i] * 100).toFixed(1)}%`
+        );
+
         const legend = document.createElement('div');
-        legend.className = 'heatmap-legend';
+        legend.style.marginTop = '10px';
+        legend.style.fontSize = '10px';
+        legend.style.color = '#666';
         legend.innerHTML = `
-            <strong>Legend:</strong>
-            <span style="background-color: #c8f0c8; padding: 2px 6px; border-radius: 3px; margin: 0 5px;">Green</span> = ↑
-            <span style="background-color: #f0c8c8; padding: 2px 6px; border-radius: 3px; margin: 0 5px;">Red</span> = ↓
+            <span style="color: #4CAF50;">Green/+</span> = increase,
+            <span style="color: #f44336;">Red/-</span> = decrease
         `;
         container.appendChild(legend);
     }
@@ -875,17 +1120,17 @@ document.addEventListener('keydown', (e) => {
 
 // Initialize slides
 document.addEventListener('DOMContentLoaded', () => {
-    // Slide 1: Baseline - no biases
+    // Slide 1: Forward pass - no biases, no pre-select, show bar plot
     const slide1 = new SlideVisualization(
         'network-container-1',
         'network-svg-1',
         'heatmap-container-1',
         {
-            // No biases - baseline configuration
+            showBarPlot: true  // Show logit bar plot instead of heatmap
         }
     );
-    
-    // Slide 2: Baseline with SPANISH target pre-selected
+
+    // Slide 2: Backward pass on HOLA (SPANISH) - no biases
     const slide2 = new SlideVisualization(
         'network-container-2',
         'network-svg-2',
@@ -894,53 +1139,33 @@ document.addEventListener('DOMContentLoaded', () => {
             // No biases, but we'll pre-select SPANISH target
         }
     );
-    // Pre-select SPANISH (index 3) as target
+    // Pre-select SPANISH (index 3) as target for backward pass
     setTimeout(() => slide2.selectOutput(3), 200);
-    
-    // Slide 3: Steering vector - bias on Spanish hidden neuron, SPANISH target pre-selected
+
+    // Slide 3: Forward pass with steering vector - Spanish neuron +2.0, show bar plot
     const slide3 = new SlideVisualization(
         'network-container-3',
         'network-svg-3',
         'heatmap-container-3',
         {
-            hiddenBias: [0, 2.0, 0, 0]  // +2.0 bias on Spanish hidden neuron
+            hiddenBias: [0, 2.0, 0, 0],  // +2.0 bias on Spanish hidden neuron
+            showBarPlot: true  // Show logit bar plot instead of heatmap
         }
     );
-    // Pre-select SPANISH (index 3) as target
-    setTimeout(() => slide3.selectOutput(3), 200);
-    
-    // Slide 4: Output biases on spanish and SPANISH, SPANISH target pre-selected
+    // No pre-select - just forward pass
+
+    // Slide 4: Backward pass on HOLA (SPANISH) with steering vector
     const slide4 = new SlideVisualization(
         'network-container-4',
         'network-svg-4',
         'heatmap-container-4',
         {
-            outputBias: [-2.0, 2.0, -2.0, 2.0]  // +2.0 bias on 'spanish' and 'SPANISH' outputs
+            hiddenBias: [0, 2.0, 0, 0]  // +2.0 bias on Spanish hidden neuron
         }
     );
-    // Pre-select SPANISH (index 3) as target
+    // Pre-select SPANISH (index 3) as target for backward pass
     setTimeout(() => slide4.selectOutput(3), 200);
-    
-    // Slide 5: Salience effect - high input weight to Spanish, compensated output weights
-    const slide5 = new SlideVisualization(
-        'network-container-5',
-        'network-svg-5',
-        'heatmap-container-5',
-        {
-            weights1: [
-                [1, 10, 0.1, 1]  // Input to [English, Spanish, Upper-case, Lowercase]
-            ],
-            weights2: [
-                [1, -1, 1, -1],      // English hidden neuron (unchanged)
-                [-0.1, 0.1, -0.1, 0.1],  // Spanish hidden neuron (scaled by 0.1)
-                [-1, -1, 1, 1],      // Upper-case hidden neuron (unchanged)
-                [1, 1, -1, -1]       // Lowercase hidden neuron (unchanged)
-            ]
-        }
-    );
-    // Pre-select SPANISH (index 3) as target
-    setTimeout(() => slide5.selectOutput(3), 200);
-    
+
     // Show first slide
     showSlide(0);
     updateNavButtons();

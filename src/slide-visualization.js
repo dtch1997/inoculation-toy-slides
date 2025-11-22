@@ -1037,19 +1037,20 @@ class SlideVisualization {
         title.style.fontSize = '14px';
         container.appendChild(title);
 
-        // Hidden layer gradients - fixed range: -1 to 1
+        // Hidden layer gradient updates (negative gradients) - fixed range: -1 to 1
         const hiddenGrads = this.network.gradHiddenBias || new Array(this.network.hiddenSize).fill(0);
+        const hiddenUpdates = hiddenGrads.map(g => -g);  // Negate for gradient descent direction
         const fixedGradMax = 1;
         this.renderBarPlotSection(
             container,
-            'Hidden Gradients',
-            'Gradient on hidden bias (∂L/∂b):',
+            'Hidden Updates',
+            'Direction of weight change (-∂L/∂b):',
             this.network.hiddenNames,
-            hiddenGrads,
+            hiddenUpdates,
             fixedGradMax,
             (i) => {
-                const g = hiddenGrads[i];
-                return `${g >= 0 ? '+' : ''}${g.toFixed(3)}`;
+                const u = hiddenUpdates[i];
+                return `${u >= 0 ? '+' : ''}${u.toFixed(3)}`;
             }
         );
 
